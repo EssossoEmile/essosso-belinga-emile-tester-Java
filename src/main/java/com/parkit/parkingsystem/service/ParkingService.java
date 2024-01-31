@@ -45,6 +45,7 @@ public class ParkingService {
                 ticket.setInTime(inTime);
                 ticket.setOutTime(null);
                 ticketDAO.saveTicket(ticket);
+                System.out.println("Welcome!");
                 System.out.println("Generated Ticket and saved in DB");
                 System.out.println("Please park your vehicle in spot number:"+parkingSpot.getId());
                 System.out.println("Recorded in-time for vehicle number:"+vehicleRegNumber+" is:"+inTime);
@@ -97,13 +98,24 @@ public class ParkingService {
         }
     }
 
+    /**
+     * Verify if the user is a recurrent number or not by checking the number of occurrences of his reg number in the DB
+     *
+     * @param vehicleRegistrationNumber vehicle registration number
+     * @return True if the user has already used the parking system before this time
+     */
+    public boolean RecurringUser(String vehicleRegistrationNumber)
+    {
+        return ticketDAO.getNbTicket(vehicleRegistrationNumber) > 1;
+    }
+
     public void processExitingVehicle() {
         try{
             String vehicleRegNumber = getVehichleRegNumber();
             Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
-            Date outTime = new Date();
+            Date outTime = new Date(((new Date().getTime() + 500) / 1000) * 1000);
             ticket.setOutTime(outTime);
-            fareCalculatorService.calculateFare(ticket);
+            fareCalculatorService.calculateFare(ticket, RecurringUser(ticket.getVehicleRegNumber()));
             if(ticketDAO.updateTicket(ticket)) {
                 ParkingSpot parkingSpot = ticket.getParkingSpot();
                 parkingSpot.setAvailable(true);
